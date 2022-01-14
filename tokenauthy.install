@@ -1,0 +1,102 @@
+<?php
+
+use Drupal\Component\Utility\Random;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_install().
+ */
+function tokenauthy_install() {
+  $form_displays = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->loadByProperties([
+      'targetEntityType' => 'user',
+      'bundle' => 'user',
+    ]);
+
+  $field_name = 'field_auth_token';
+  if ($form_displays) {
+    foreach ($form_displays as $form_display) {
+      $form_display->setComponent($field_name, [
+        'type' => 'string_textfield',
+        'settings' => [
+          'size' => '60',
+          'placeholder' => '',
+        ],
+        'weight' => 100
+      ])->save();
+    }
+  }
+
+  tokenauth_generate_tokens();
+}
+
+function tokenauth_generate_tokens() {
+  $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
+  $query = $entity_storage->getQuery()->condition('status', 1);
+  $all_users = $query->execute();
+
+  $batch = [
+    'operations' => [
+      ['update_user_field_auth_token', [array_values($all_users), count($all_users)]],
+    ],
+    'file' => \Drupal::moduleHandler()->getModule('tokenauthy')->getPath() . '/tokenauthy.install',
+  ];
+  batch_set($batch);
+  if (PHP_SAPI == 'cli') {
+    drush_backend_batch_process();
+  }
+  else {
+    $batch = &batch_get();
+    $batch['progressive'] = FALSE;
+    batch_process();
+  }
+}
+
+/**
+ * Callback for batch operations.
+ */
+function update_user_field_auth_token($all_users, $total, &$context) {
+  if (empty($context['sandbox'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['all_users'] = $all_users;
+    $context['sandbox']['max'] = $total;
+  }
+
+  $start = $context['sandbox']['progress'];
+  $end = min($context['sandbox']['max'], $start + 10);
+  for ($i = $start; $i < $end; $i++) {
+    $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
+    $user = $entity_storage->load($context['sandbox']['all_users'][$i]);
+
+    if ($user instanceof UserInterface) {
+      $token = Random::name(32);
+      $user->set('field_auth_token', [['value' => $token]]);
+      $user->save();
+    }
+    $context['sandbox']['progress']++;
+  }
+
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function tokenauthy_uninstall() {
+  // Deleting field storage.
+  $field_storage = FieldStorageConfig::loadByName('user', 'field_auth_token');
+  if ($field_storage) {
+    $field_storage->delete();
+  }
+  // Deleting field.
+  $field_definition = FieldConfig::loadByName('user', 'user', 'field_auth_token');
+  if ($field_definition) {
+    $field_definition->delete();
+  }
+}
+

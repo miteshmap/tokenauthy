@@ -1,0 +1,14 @@
+<?php
+
+use Drupal\Component\Utility\Random;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_presave().
+ */
+function tokenauthy_user_presave(EntityInterface $entity) {
+  if ($entity->bundle() == 'user' && empty($entity->get('field_auth_token')->value)) {
+    $token = Random::name(32);
+    $entity->set('field_auth_token', [['value' => $token]]);
+  }
+}

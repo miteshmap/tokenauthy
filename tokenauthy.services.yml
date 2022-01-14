@@ -1,0 +1,19 @@
+services:
+  tokenauthy.authentication.auth_token:
+    class: Drupal\tokenauthy\Authentication\Provider\AuthToken
+    arguments:
+      - '@session'
+      - '@entity_type.manager'
+    tags:
+      - { name: authentication_provider, provider_id: 'auth_token', priority: 50, global: TRUE }
+  tokenauthy.page_cache_request_policy.by_pass_auth_token:
+    class: Drupal\tokenauthy\PageCache\AllowAuthTokenRequests
+    public: false
+    tags:
+      - { name: page_cache_request_policy }
+  tokenauthy.event_subscriber:
+    class: Drupal\tokenauthy\EventSubscriber\TokenAuthyEventSubscriber
+    arguments:
+      - '@session'
+    tags:
+      - { name: event_subscriber }
