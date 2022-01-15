@@ -20,6 +20,8 @@ class TokenAuthyEventSubscriber implements EventSubscriberInterface {
   protected $session;
 
   /**
+   * construct.
+   *
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
    */
