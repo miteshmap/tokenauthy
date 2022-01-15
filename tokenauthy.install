@@ -8,39 +8,7 @@ use Drupal\user\UserInterface;
  * Implements hook_install().
  */
 function tokenauthy_install() {
-  $form_displays = \Drupal::entityTypeManager()
-    ->getStorage('entity_form_display')
-    ->loadByProperties([
-      'targetEntityType' => 'user',
-      'bundle' => 'user',
-    ]);
-
-  $field_name = 'field_auth_token';
-  if ($form_displays) {
-    foreach ($form_displays as $form_display) {
-      $form_display->setComponent($field_name, [
-        'type' => 'string_textfield',
-        'settings' => [
-          'size' => '60',
-          'placeholder' => '',
-        ],
-        'weight' => 100
-      ])->save();
-    }
-  }
-
   // Generate token for all existing users.
-  tokenauth_generate_tokens();
-}
-
-/**
- * Generate token for existing users.
- *
- * @return void
- * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
- * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
- */
-function tokenauth_generate_tokens() {
   $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
   $query = $entity_storage->getQuery()->condition('status', 1);
   $all_users = $query->execute();

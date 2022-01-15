@@ -14,7 +14,7 @@ class AllowAuthTokenRequests implements RequestPolicyInterface {
    * {@inheritdoc}
    */
   public function check(Request $request) {
-    if ($request->query->has('authtoken')) {
+    if (PHP_SAPI !== 'cli' && $request->query->has('authtoken')) {
       return self::DENY;
     }
     return NULL;
