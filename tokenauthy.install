@@ -1,6 +1,5 @@
 <?php
 
-use Drupal\Component\Utility\Random;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\user\UserInterface;
@@ -30,9 +29,17 @@ function tokenauthy_install() {
     }
   }
 
+  // Generate token for all existing users.
   tokenauth_generate_tokens();
 }
 
+/**
+ * Generate token for existing users.
+ *
+ * @return void
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ */
 function tokenauth_generate_tokens() {
   $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
   $query = $entity_storage->getQuery()->condition('status', 1);
@@ -67,12 +74,13 @@ function update_user_field_auth_token($all_users, $total, &$context) {
 
   $start = $context['sandbox']['progress'];
   $end = min($context['sandbox']['max'], $start + 10);
+  $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
+  $token_service = \Drupal::service('tokenauthy');
   for ($i = $start; $i < $end; $i++) {
-    $entity_storage = \Drupal::entityTypeManager()->getStorage('user');
     $user = $entity_storage->load($context['sandbox']['all_users'][$i]);
 
     if ($user instanceof UserInterface) {
-      $token = Random::name(32);
+      $token = $token_service->generateToken();
       $user->set('field_auth_token', [['value' => $token]]);
       $user->save();
     }

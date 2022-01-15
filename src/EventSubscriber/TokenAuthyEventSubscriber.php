@@ -7,11 +7,22 @@ use Drupal\Core\Session\AccountSetEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
+/**
+ * The token authy event subscriber.
+ */
 class TokenAuthyEventSubscriber implements EventSubscriberInterface {
 
+  /**
+   * The session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
   protected $session;
 
-
+  /**
+   * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+   *   The session.
+   */
   public function __construct(SessionInterface $session) {
     $this->session = $session;
   }

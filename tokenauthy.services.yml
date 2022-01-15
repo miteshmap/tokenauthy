@@ -4,6 +4,7 @@ services:
     arguments:
       - '@session'
       - '@entity_type.manager'
+      - '@tokenauthy'
     tags:
       - { name: authentication_provider, provider_id: 'auth_token', priority: 50, global: TRUE }
   tokenauthy.page_cache_request_policy.by_pass_auth_token:
@@ -17,3 +18,8 @@ services:
       - '@session'
     tags:
       - { name: event_subscriber }
+  tokenauthy:
+    class: Drupal\tokenauthy\Services\TokenAuthy
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'

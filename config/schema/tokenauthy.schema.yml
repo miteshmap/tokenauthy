@@ -1,0 +1,10 @@
+tokenauthy.settings:
+  type: config_object
+  label: 'Tokenauthy settings'
+  mapping:
+    token_size:
+      type: integer
+      label: 'token length'
+    autogenerate:
+      type: boolean
+      label: 'AutoGenerate token for new users'
