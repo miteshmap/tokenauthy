@@ -99,6 +99,9 @@ class AuthTokenMiddleware implements HttpKernelInterface {
             return $response;
           }
           $request->getSession()->set('uid', $user->id());
+          // As the cookies are not set when we are setting the uid in session.
+          // "cookie" authentication does not authenticate user.
+          // that's why getting the session name and setting it in cookie here.
           $options = $this->sessionConfiguration->getOptions($request);
           $request->cookies->set($options['name'], '');
         }
